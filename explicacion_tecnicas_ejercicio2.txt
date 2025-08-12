@@ -1,0 +1,30 @@
+## Explicación de Técnicas de Procesamiento de Imágenes
+
+### 1. Segmentación de Imágenes
+
+La segmentación es el proceso de dividir una imagen en partes significativas. En este trabajo se utilizaron:
+
+**a) Filtrado Gaussiano:**
+- Objetivo: Reducir el ruido en la imagen preservando los bordes importantes.
+- Funcionamiento: Aplica un desenfoque usando una función de ponderación Gaussiana, donde píxeles cercanos al centro tienen mayor peso.
+- Parámetros: Se usó un kernel de 5x5 con desviación estándar 0.
+
+**b) Umbralización de Otsu:**
+- Objetivo: Convertir la imagen a blanco y negro (binarización) automáticamente.
+- Funcionamiento: Calcula el umbral óptimo que minimiza la varianza intra-clase entre píxeles de fondo y primer plano.
+- Ventaja: No requiere selección manual del umbral, es adaptativo.
+
+### 2. Detección de Bordes
+
+**Algoritmo find_contours de scikit-image:**
+- Objetivo: Encontrar los límites precisos de la gota.
+- Funcionamiento:
+  1. Usa el algoritmo de "marching squares" para encontrar líneas de contorno en imágenes 2D.
+  2. Localiza los puntos donde la intensidad de la imagen cambia abruptamente.
+  3. Conecta estos puntos para formar curvas cerradas.
+- Parámetros: Se usó un nivel de contorno de 0.5 (valor intermedio entre 0 y 1).
+
+**Post-procesamiento:**
+- Selección del contorno más grande: Se asume que corresponde a la gota.
+- Ajuste de coordenadas: Conversión a micrómetros y posicionamiento con y=0 en la base.
+    """

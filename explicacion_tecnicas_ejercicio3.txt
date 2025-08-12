@@ -1,0 +1,39 @@
+Análisis de Resultados - Ejercicio 3
+------------------------------------
+
+1. Simetría de la Gota:
+----------------------
+- El coeficiente de simetría promedio es 0.968 (rango: 0.933 - 0.995), indicando alta simetría bilateral.
+- La mayor asimetría ocurre en TP4_Gota_0006.jpg (simetría=0.934), donde el perímetro izquierdo (2.214E-09 m) es 7% mayor que el derecho (2.068E-09 m).
+- En TP4_Gota_0004.jpg se observa la máxima simetría (0.995), con diferencias <0.5% entre perímetros.
+
+2. Factor de Esparcimiento (Sf):
+------------------------------
+- El valor promedio es 1.039 (rango: 1.026 - 1.054), mostrando poca variación temporal.
+- La gota mantiene una forma consistentemente achatada (Sf >1), con diámetro base ~4% mayor que su altura.
+- El máximo Sf (1.054 en TP4_Gota_0003.jpg) coincide con una reducción del 8% en la altura respecto al valor inicial.
+
+3. Energía Cinética:
+------------------
+- La energía varía entre 5.893E-29 J y 9.387E-27 J, sin patrón de conservación claro.
+- Los picos energéticos (TP4_Gota_0001.jpg y TP4_Gota_0005.jpg) sugieren transferencia de energía potencial durante el impacto.
+- La energía mínima (5.893E-29 J en TP4_Gota_0007.jpg) corresponde a un instante de baja velocidad (derivada de posición).
+
+4. Relaciones Clave:
+------------------
+- No se observa correlación directa entre simetría y energía cinética (R²=0.12).
+- Los mayores factores de esparcimiento coinciden con menores alturas (R²=0.89), evidenciando deformación vertical durante el impacto.
+- La asimetría aumenta levemente en frames con alta energía (TP4_Gota_0006.jpg), posiblemente por inestabilidades dinámicas.
+
+5. Conclusiones:
+--------------
+- La gota presenta alta simetría inicial que se mantiene durante el impacto (variaciones <7%).
+- La forma se deforma verticalmente (Sf estable) sin cambios bruscos en la base.
+- La energía no se conserva, indicando disipación viscosa/elástica durante la colisión.
+- Los datos sugieren un régimen de impacto dinámico con amortiguamiento energético.
+
+Recomendaciones:
+---------------
+- Verificar cálculo de volumen para energía cinética (posible subestimación en frames con alta deformación).
+- Analizar correlación con ángulos de contacto del Ejercicio 2 para detectar dependencias geométricas.
+- Estudiar frames 0006-0007 (mayor asimetría) para identificar mecanismos de deformación.
