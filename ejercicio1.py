@@ -143,9 +143,8 @@ def procesar_todas_imagenes(carpeta_imagenes, num_imagenes=126, escala=4.13):
 
     return pd.DataFrame(datos)
 
-
 def exportar_a_excel(df, nombre_archivo='resultados_completos.xlsx'):
-    """Exporta todos los datos a un archivo Excel organizado con mejor formato.
+    """Exporta todos los datos a un archivo Excel en una sola hoja con mejor formato.
 
     Args:
         df (pd.DataFrame): DataFrame con los datos a exportar
@@ -159,73 +158,52 @@ def exportar_a_excel(df, nombre_archivo='resultados_completos.xlsx'):
         if df.empty:
             raise ValueError("El DataFrame está vacío")
 
-        required_cols = ['Imagen', 'Tiempo (s)', 'Contorno_x', 'Contorno_y']
+        required_cols = ['Imagen', 'Tiempo (s)', 'Centroide_x (µm)', 'Centroide_y (µm)',
+                         'N_puntos_contorno', 'Contorno_x', 'Contorno_y']
         if not all(col in df.columns for col in required_cols):
             raise ValueError(f"DataFrame no contiene columnas requeridas: {required_cols}")
 
         wb = Workbook()
+        ws = wb.active
+        ws.title = "Datos Completos"
 
-        # Hoja 1: Datos principales con mejor formato
-        ws1 = wb.active
-        ws1.title = "Datos Principales"
-
-        # Escribir encabezado con estilo
         header_style = Font(bold=True, color="FFFFFF")
         fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
 
-        for col_num, col_name in enumerate(['Imagen', 'Tiempo (s)', 'Centroide_x (µm)',
-                                            'Centroide_y (µm)', 'N_puntos_contorno'], 1):
-            cell = ws1.cell(row=1, column=col_num, value=col_name)
+        # Escribir encabezado
+        columnas = ['Imagen', 'Tiempo (s)', 'Centroide_x (µm)', 'Centroide_y (µm)',
+                    'N_puntos_contorno', 'Contorno_x', 'Contorno_y']
+
+        for col_num, col_name in enumerate(columnas, 1):
+            cell = ws.cell(row=1, column=col_num, value=col_name)
             cell.font = header_style
             cell.fill = fill
 
-        # Escribir datos
-        for row_num, row_data in enumerate(dataframe_to_rows(df[['Imagen', 'Tiempo (s)',
-                                                                 'Centroide_x (µm)',
-                                                                 'Centroide_y (µm)',
-                                                                 'N_puntos_contorno']],
-                                                             index=False, header=False), 2):
+        for row_num, row_data in enumerate(dataframe_to_rows(df[columnas], index=False, header=False), 2):
             for col_num, value in enumerate(row_data, 1):
-                ws1.cell(row=row_num, column=col_num, value=value)
+                ws.cell(row=row_num, column=col_num, value=value)
 
-        # Ajustar formato de columnas
-        for col in ws1.columns:
-            col_letter = col[0].column_letter
-            ws1.column_dimensions[col_letter].width = 20
-            for cell in col:
+        column_widths = {
+            'A': 20,  # Imagen
+            'B': 12,  # Tiempo
+            'C': 16,  # Centroide X
+            'D': 16,  # Centroide Y
+            'E': 18,  # N_puntos
+            'F': 30,  # Contorno_x
+            'G': 30  # Contorno_y
+        }
+
+        for col_letter, width in column_widths.items():
+            ws.column_dimensions[col_letter].width = width
+
+        # Aplicar formato numérico y alineación
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
                 cell.alignment = Alignment(horizontal='center')
-                if col_letter in ['C', 'D']:  # Columnas de centroides
+                if cell.column_letter in ['B', 'C', 'D', 'E']:
                     cell.number_format = '0.00'
 
-        # Hoja 2: Contornos completos
-        ws2 = wb.create_sheet("Contornos Completos")
-
-        # Encabezado
-        ws2.append(['Imagen', 'Tiempo (s)', 'Puntos_contorno', 'Contorno_x', 'Contorno_y'])
-        for cell in ws2[1]:
-            cell.font = header_style
-            cell.fill = fill
-
-        # Datos
-        for _, row in df.iterrows():
-            ws2.append([
-                row['Imagen'],
-                row['Tiempo (s)'],
-                row['N_puntos_contorno'],
-                row['Contorno_x'],
-                row['Contorno_y']
-            ])
-
-        # Guardar el archivo Excel
         wb.save(nombre_archivo)
-
-        # Limpiar imágenes temporales
-        for img_path in df['Ruta_imagen_procesada']:
-            if img_path and os.path.exists(img_path):
-                try:
-                    os.unlink(img_path)
-                except:
-                    pass
 
         print(f"\nArchivo Excel generado exitosamente: {nombre_archivo}")
         return True
@@ -233,7 +211,6 @@ def exportar_a_excel(df, nombre_archivo='resultados_completos.xlsx'):
     except Exception as e:
         print(f"\nError al exportar a Excel: {str(e)}")
         return False
-
 
 def graficar_centroides_vs_tiempo(df, nombre_archivo='centroides_vs_tiempo.png'):
     """Grafica la posición X e Y del centroide con estilo mejorado."""

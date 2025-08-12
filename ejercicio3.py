@@ -218,10 +218,7 @@ def generar_informe3(carpeta_imagenes=None, num_imagenes=126):
             if not os.path.exists('resultados_completos.xlsx'):
                 raise FileNotFoundError("No se encontró 'resultados_completos.xlsx'")
 
-            df = pd.read_excel('resultados_completos.xlsx', sheet_name='Datos Principales')
-            df_contornos = pd.read_excel('resultados_completos.xlsx', sheet_name='Contornos Completos')
-            df['Contorno_x'] = df_contornos['Contorno_x']
-            df['Contorno_y'] = df_contornos['Contorno_y']
+            df = pd.read_excel('resultados_completos.xlsx', sheet_name='Datos Completos')
 
         # Validar datos cargados
         if df.empty:
@@ -248,7 +245,7 @@ def generar_informe3(carpeta_imagenes=None, num_imagenes=126):
 
         # Exportar resultados
         print("\nExportando resultados...")
-        df.to_excel('resultados_completos_con_ej3.xlsx', index=False)
+        df.to_excel('resultados_completos3.xlsx', index=False)
 
         # Generar gráficos
         graficar_resultados_ej3(df)

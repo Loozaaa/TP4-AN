@@ -241,7 +241,7 @@ def generar_informe2():
             raise FileNotFoundError("No se encontró el archivo 'resultados_completos.xlsx'")
 
         # 2. Cargar datos con validación de columnas
-        df = pd.read_excel('resultados_completos.xlsx', sheet_name='Contornos Completos')
+        df = pd.read_excel('resultados_completos.xlsx', sheet_name='Datos Completos')
         required_cols = ['Contorno_x', 'Contorno_y', 'Imagen', 'Tiempo (s)']
         if not all(col in df.columns for col in required_cols):
             raise ValueError(f"El archivo Excel no contiene las columnas requeridas: {required_cols}")
@@ -255,7 +255,7 @@ def generar_informe2():
         df_angulos = calcular_angulo_contacto(df_ajustes, altura_contacto=50)
 
         # 5. Exportar y graficar con más información
-        df_angulos.to_excel('angulos_contacto.xlsx', index=False)
+        df_angulos.to_excel('resultados_completos2.xlsx', index=False)
         graficar_resultados(df_angulos)
 
         # 6. Análisis mejorado
