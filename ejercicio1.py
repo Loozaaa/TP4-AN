@@ -12,16 +12,18 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Font, Alignment, PatternFill
 import tempfile
 
-def procesar_imagen(ruta_imagen, escala=4.13):
+def procesar_imagen(ruta_imagen, escala=4.13, referencia_pixel=(144, 131)):
     """Procesa una imagen individual y extrae su contorno y centroide.
 
     Args:
         ruta_imagen (str): Ruta a la imagen a procesar
         escala (float): Factor de conversión de píxeles a micrómetros (µm/px)
+        referencia_pixel (tuple): (x_ref, y_ref) píxel que define la línea y=0
 
     Returns:
         tuple: (contorno_µm, (centro_x, centro_y), ruta_imagen_procesada)
-               o (None, None, None) si hay error
+               o (None, None, None) si hay error o la gota no está correctamente
+               identificada por encima de la referencia
     """
     try:
         # Validar parámetros de entrada
@@ -37,44 +39,63 @@ def procesar_imagen(ruta_imagen, escala=4.13):
             raise ValueError(f"No se pudo cargar la imagen {ruta_imagen}")
 
         # 2. Preprocesamiento - Suavizado Gaussiano para reducir ruido
-        # (kernel de 5x5, sigma calculado automáticamente)
         imagen_suavizada = cv2.GaussianBlur(imagen, (5, 5), 0)
 
         # 3. Binarización - Método de Otsu para umbral automático
-        # Este método maximiza la varianza entre clases de píxeles
         thresh = threshold_otsu(imagen_suavizada)
         imagen_binaria = imagen_suavizada > thresh
 
         # 4. Detección de contornos usando marching squares
-        # (nivel 0.5 para contorno a medio camino entre blanco/negro)
         contornos = measure.find_contours(imagen_binaria, 0.5)
         if not contornos:
-            raise ValueError("No se encontraron contornos en la imagen")
+            # No se encontraron contornos útiles
+            return None, None, None
 
-        # Seleccionar el contorno más largo (por área)
-        contorno = max(contornos, key=lambda x: len(x))
+        # Filtrar contornos descartando aquellos que estén principalmente bajo la referencia
+        x_ref, y_ref = referencia_pixel
+        contornos_arriba = [c for c in contornos if np.mean(c[:, 0]) < (y_ref + 5)]
 
-        # 5. Convertir a micrómetros y ajustar coordenadas
-        contorno_µm = contorno * escala
-        y_min = np.min(contorno_µm[:, 0])
-        contorno_µm[:, 0] -= y_min  # Ajustar para que y=0 sea la base
+        if len(contornos_arriba) == 0:
+            # Si no hay contornos claramente arriba, tomar el más alto (menor y medio)
+            contorno = min(contornos, key=lambda x: np.mean(x[:, 0]))
+        else:
+            # Preferir el contorno más grande entre los que están arriba
+            contorno = max(contornos_arriba, key=lambda x: len(x))
 
-        # 6. Calcular centroide (centro de masa)
+        # 5. Filtrar puntos por encima de la línea de referencia (el reflejo está debajo)
+        mask_arriba = contorno[:, 0] < y_ref
+        contorno_filtrado = contorno[mask_arriba]
+
+        # Si la porción por encima de la referencia es muy pequeña, considerar la imagen inválida
+        if contorno_filtrado.shape[0] < 10:
+            return None, None, None
+
+        # 6. Re-centrar coordenadas: definir origen en (x_ref, y_ref), con y positivo hacia arriba
+        # contorno_filtrado columnas: 0->y(px), 1->x(px)
+        contorno_px = np.zeros_like(contorno_filtrado)
+        contorno_px[:, 1] = contorno_filtrado[:, 1] - x_ref
+        contorno_px[:, 0] = y_ref - contorno_filtrado[:, 0]
+
+        # 7. Convertir a micrómetros
+        contorno_µm = contorno_px * escala
+
+        # 8. Calcular centroide en µm
         centro_x = float(np.mean(contorno_µm[:, 1]))
         centro_y = float(np.mean(contorno_µm[:, 0]))
 
-        # 7. Visualización para diagnóstico
+        # 9. Visualización para diagnóstico (guardar imagen temporal)
         fig, ax = plt.subplots(figsize=(6, 6))
         ax.imshow(imagen, cmap='gray')
-        ax.plot(contorno[:, 1], contorno[:, 0], 'r-', linewidth=2, label='Contorno')
-        ax.scatter(contorno[:, 1].mean(), contorno[:, 0].mean(),
-                   c='blue', marker='x', s=100, label='Centroide')
+        ax.plot(contorno_filtrado[:, 1], contorno_filtrado[:, 0], 'r-', linewidth=2, label='Contorno')
+        ax.axhline(y=y_ref, color='y', linestyle='--', linewidth=1.0, label='Referencia y=0')
+        centro_px_x = centro_x / escala + x_ref
+        centro_px_y = y_ref - (centro_y / escala)
+        ax.scatter(centro_px_x, centro_px_y, c='blue', marker='x', s=100, label='Centroide')
         ax.axis('off')
         plt.legend(loc='upper right')
         plt.title(f'Procesamiento: {os.path.basename(ruta_imagen)}')
         plt.tight_layout()
 
-        # Guardar imagen temporal
         temp_img = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
         plt.savefig(temp_img.name, bbox_inches='tight', pad_inches=0, dpi=150)
         plt.close()
