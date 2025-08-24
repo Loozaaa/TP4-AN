@@ -140,37 +140,11 @@ def calcular_angulo_contacto(df_ajustes, altura_contacto=50):
             if row['spline_izq'] is not None:
                 try:
                     y_min, y_max = row['spline_izq'].get_knots()[0], row['spline_izq'].get_knots()[-1]
-<<<<<<< Updated upstream
                     y_eval = np.linspace(max(0, y_min), min(altura_contacto, y_max), 10)
                     dxdy_izq = row['spline_izq'].derivative()(y_eval)
                     dxdy_izq = np.asarray(dxdy_izq, dtype=float)
                     if np.any(np.isfinite(dxdy_izq)):
                         angulo_izq = float(np.nanmean(np.degrees(np.arctan(dxdy_izq[np.isfinite(dxdy_izq)]))))
-=======
-                    # Usar más puntos de evaluación y concentrarlos cerca de la base
-                    y_eval = np.linspace(max(0, y_min), min(altura_contacto, y_max), 20)
-                    # Concentrar más puntos cerca de la base usando una distribución exponencial
-                    y_eval = y_min + (y_eval - y_min) ** 2 / (y_eval[-1] - y_min)
-
-                    # Calcular derivadas y filtrar valores atípicos
-                    dxdy_izq = row['spline_izq'].derivative()(y_eval)
-                    dxdy_izq = np.asarray(dxdy_izq, dtype=float)
-
-                    if np.any(np.isfinite(dxdy_izq)):
-                        # Filtrar valores atípicos usando la mediana y la desviación absoluta mediana
-                        valid_vals = dxdy_izq[np.isfinite(dxdy_izq)]
-                        median = np.median(valid_vals)
-                        mad = np.median(np.abs(valid_vals - median))
-                        mask = np.abs(valid_vals - median) < 2.0 * mad
-
-                        if np.any(mask):
-                            # Usar media ponderada dando más peso a los puntos cercanos a la base
-                            weights = np.exp(-y_eval[np.isfinite(dxdy_izq)][mask] / altura_contacto)
-                            angulo_izq = float(np.average(
-                                np.degrees(np.arctan(valid_vals[mask])),
-                                weights=weights
-                            ))
->>>>>>> Stashed changes
                 except Exception as e:
                     # print(f"[WARN] derivada izq fallo en {row['Imagen']}: {e}")
                     angulo_izq = np.nan
@@ -178,60 +152,15 @@ def calcular_angulo_contacto(df_ajustes, altura_contacto=50):
             if row['spline_der'] is not None:
                 try:
                     y_min, y_max = row['spline_der'].get_knots()[0], row['spline_der'].get_knots()[-1]
-<<<<<<< Updated upstream
                     y_eval = np.linspace(max(0, y_min), min(altura_contacto, y_max), 10)
                     dxdy_der = row['spline_der'].derivative()(y_eval)
                     dxdy_der = np.asarray(dxdy_der, dtype=float)
                     if np.any(np.isfinite(dxdy_der)):
                         angulo_der = float(np.nanmean(np.degrees(np.arctan(dxdy_der[np.isfinite(dxdy_der)]))))
-=======
-                    # Usar más puntos de evaluación y concentrarlos cerca de la base
-                    y_eval = np.linspace(max(0, y_min), min(altura_contacto, y_max), 20)
-                    # Concentrar más puntos cerca de la base usando una distribución exponencial
-                    y_eval = y_min + (y_eval - y_min) ** 2 / (y_eval[-1] - y_min)
-
-                    # Calcular derivadas y filtrar valores atípicos
-                    dxdy_der = row['spline_der'].derivative()(y_eval)
-                    dxdy_der = np.asarray(dxdy_der, dtype=float)
-
-                    if np.any(np.isfinite(dxdy_der)):
-                        # Filtrar valores atípicos usando la mediana y la desviación absoluta mediana
-                        valid_vals = dxdy_der[np.isfinite(dxdy_der)]
-                        median = np.median(valid_vals)
-                        mad = np.median(np.abs(valid_vals - median))
-                        mask = np.abs(valid_vals - median) < 2.0 * mad
-
-                        if np.any(mask):
-                            # Usar media ponderada dando más peso a los puntos cercanos a la base
-                            weights = np.exp(-y_eval[np.isfinite(dxdy_der)][mask] / altura_contacto)
-                            angulo_der = float(np.average(
-                                np.degrees(np.arctan(valid_vals[mask])),
-                                weights=weights
-                            ))
->>>>>>> Stashed changes
                 except Exception as e:
                     # print(f"[WARN] derivada der fallo en {row['Imagen']}: {e}")
                     angulo_der = np.nan
 
-<<<<<<< Updated upstream
-=======
-            # Calculamos el cambio en el factor de esparcimiento respecto al tiempo anterior
-            factor_actual = row.get('Factor_esparcimiento', np.nan)
-            tiempo_actual = row['Tiempo (s)']
-
-            # Si es el primer punto o hay un cambio significativo en el factor de esparcimiento, es dinámico
-            umbral_cambio = 0.05  # 5% de cambio como umbral
-            es_dinamico = True
-
-            if len(angulos) > 0:
-                factor_anterior = angulos[-1].get('Factor_esparcimiento', np.nan)
-                tiempo_anterior = angulos[-1].get('Tiempo (s)', 0)
-
-                if not np.isnan(factor_actual) and not np.isnan(factor_anterior) and tiempo_actual > tiempo_anterior:
-                    tasa_cambio = abs((factor_actual - factor_anterior) / (factor_anterior * (tiempo_actual - tiempo_anterior)))
-                    es_dinamico = tasa_cambio > umbral_cambio
-
->>>>>>> Stashed changes
             angulos.append({
                 'Imagen': row['Imagen'],
                 'Tiempo (s)': row['Tiempo (s)'],
@@ -242,14 +171,9 @@ def calcular_angulo_contacto(df_ajustes, altura_contacto=50):
                 'Perimetro_izq': row.get('Perimetro_izq', np.nan),
                 'Perimetro_der': row.get('Perimetro_der', np.nan),
                 'Asimetria_perimetro': row.get('Asimetria_perimetro', np.nan),
-<<<<<<< Updated upstream
                 'Factor_esparcimiento': row.get('Factor_esparcimiento', np.nan),
                 'Energia_cinetica': np.nan,  # si quieres mantener cálculo, ajustarlo aquí
                 'Tipo_angulo': 'Dinámico' if (row['Tiempo (s)'] < 0.01) else 'Estático'
-=======
-                'Factor_esparcimiento': factor_actual,
-                'Tipo_angulo': 'Dinámico' if es_dinamico else 'Estático'
->>>>>>> Stashed changes
             })
 
         except Exception as e:
@@ -282,68 +206,21 @@ def graficar_resultados(df_angulos):
     if 'Angulo_izq' in df_angulos:
         plt.plot(df_angulos['Tiempo (s)'], df_angulos['Angulo_izq'], 'b-', label='Izquierdo')
     if 'Angulo_der' in df_angulos:
-<<<<<<< Updated upstream
         plt.plot(df_angulos['Tiempo (s)'], df_angulos['Angulo_der'], 'r-', label='Derecho')
     plt.legend()
     plt.grid(True)
-=======
-        plt.plot(df_angulos['Tiempo (s)'], df_angulos['Angulo_der'], 'r-', label='Derecho', linewidth=2)
-    plt.title('Evolución de Ángulos de Contacto', fontsize=12, pad=10)
-    plt.xlabel('Tiempo (s)', fontsize=10)
-    plt.ylabel('Ángulo (grados)', fontsize=10)
-    plt.legend(fontsize=10)
-    plt.grid(True, alpha=0.3)
-
-    # Agregar valor promedio como línea horizontal
-    if 'Angulo_izq' in df_angulos and 'Angulo_der' in df_angulos:
-        avg_izq = df_angulos['Angulo_izq'].mean()
-        avg_der = df_angulos['Angulo_der'].mean()
-        plt.axhline(y=avg_izq, color='b', linestyle='--', alpha=0.5)
-        plt.axhline(y=avg_der, color='r', linestyle='--', alpha=0.5)
-        # Agregar anotaciones con los promedios
-        plt.text(0.02, 0.98, f'Prom. Izq: {avg_izq:.1f}°',
-                transform=ax1.transAxes, fontsize=9, verticalalignment='top', color='blue')
-        plt.text(0.02, 0.93, f'Prom. Der: {avg_der:.1f}°',
-                transform=ax1.transAxes, fontsize=9, verticalalignment='top', color='red')
->>>>>>> Stashed changes
 
     # Gráfico 2: Asimetría
     plt.subplot(2, 2, 2)
     if 'Asimetria_perimetro' in df_angulos:
-<<<<<<< Updated upstream
         plt.plot(df_angulos['Tiempo (s)'], df_angulos['Asimetria_perimetro'], 'g-')
     plt.grid(True)
-=======
-        plt.plot(df_angulos['Tiempo (s)'], df_angulos['Asimetria_perimetro'], 'g-', linewidth=2)
-    plt.title('Asimetría del Perímetro', fontsize=12, pad=10)
-    plt.xlabel('Tiempo (s)', fontsize=10)
-    plt.ylabel('Asimetría', fontsize=10)
-    plt.grid(True, alpha=0.3)
-    if 'Asimetria_perimetro' in df_angulos:
-        avg_asim = df_angulos['Asimetria_perimetro'].mean()
-        plt.axhline(y=avg_asim, color='g', linestyle='--', alpha=0.5)
-        plt.text(0.02, 0.98, f'Prom. Asimetría: {avg_asim:.3f}',
-                transform=ax2.transAxes, fontsize=9, verticalalignment='top', color='green')
->>>>>>> Stashed changes
 
     # Gráfico 3: Factor de esparcimiento
     plt.subplot(2, 2, 3)
     if 'Factor_esparcimiento' in df_angulos:
-<<<<<<< Updated upstream
         plt.plot(df_angulos['Tiempo (s)'], df_angulos['Factor_esparcimiento'], 'm-')
     plt.grid(True)
-=======
-        plt.plot(df_angulos['Tiempo (s)'], df_angulos['Factor_esparcimiento'], 'm-', linewidth=2)
-    plt.title('Factor de Esparcimiento', fontsize=12, pad=10)
-    plt.xlabel('Tiempo (s)', fontsize=10)
-    plt.ylabel('Factor', fontsize=10)
-    plt.grid(True, alpha=0.3)
-    if 'Factor_esparcimiento' in df_angulos:
-        avg_factor = df_angulos['Factor_esparcimiento'].mean()
-        plt.axhline(y=avg_factor, color='m', linestyle='--', alpha=0.5)
-        plt.text(0.02, 0.98, f'Prom. Factor: {avg_factor:.3f}',
-                transform=ax3.transAxes, fontsize=9, verticalalignment='top', color='magenta')
->>>>>>> Stashed changes
 
     # Gráfico 4: Energía cinética
     plt.subplot(2, 2, 4)
@@ -352,18 +229,7 @@ def graficar_resultados(df_angulos):
     plt.grid(True)
 
     plt.tight_layout()
-<<<<<<< Updated upstream
     plt.savefig('resultados_angulos.png')
-=======
-
-    # Agregar un título general
-    plt.suptitle('Análisis de Ángulos de Contacto y Parámetros Relacionados',
-                fontsize=14, y=1.02)
-
-    # Guardar con alta resolución
-    plt.savefig('resultados_angulos.png', dpi=300, bbox_inches='tight')
-    plt.savefig('resultados_ejercicio3.png', dpi=300, bbox_inches='tight')  # Guardar con ambos nombres
->>>>>>> Stashed changes
     plt.close()
 
 def generar_informe2():

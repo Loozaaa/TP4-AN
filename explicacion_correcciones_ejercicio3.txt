@@ -1,0 +1,104 @@
+# CORRECCIONES REALIZADAS EN EL EJERCICIO 3 - CÁLCULO DE PERÍMETROS
+
+## Problemas identificados en el código original:
+
+### 1. **División incorrecta del contorno**
+**Problema:** La concatenación del contorno derecho creaba discontinuidades:
+```python
+# Código original problemático:
+contorno_izq = contorno[idx_izq:idx_der + 1]
+contorno_der = np.vstack((contorno[idx_der:], contorno[:idx_izq + 1]))
+```
+
+**Solución implementada:**
+- Creé la función `dividir_contorno_mejorado()` que:
+  - Verifica si los puntos de contacto están bien separados
+  - Si están bien separados, usa división directa mejorada
+  - Si no, usa división alternativa basada en el centroide y ápice de la gota
+
+### 2. **Función de cálculo de perímetro poco robusta**
+**Problema:** La interpolación cúbica fallaba con contornos discontinuos
+
+**Solución implementada:**
+```python
+def calcular_perimetro(contorno, escala):
+    # Detecta saltos grandes en el contorno
+    # Usa interpolación cúbica solo para contornos suaves
+    # Fallback a método simple si hay problemas
+    # Verificación de sanidad entre métodos
+```
+
+### 3. **Puntos de contacto mal manejados**
+**Problema:** No se garantizaba el orden correcto de los índices
+
+**Solución implementada:**
+- Mejoré `encontrar_puntos_contacto()` para asegurar `idx_izq < idx_der`
+- Agregué fallback para casos donde no se encuentran suficientes puntos base
+
+### 4. **Falta de validación de división por cero**
+**Problema:** Cálculo de simetría podía fallar con perímetros cero
+
+**Solución implementada:**
+```python
+if max(perim_izq, perim_der) > 0:
+    simetria = 1 - abs(perim_izq - perim_der) / max(perim_izq, perim_der)
+else:
+    simetria = 0.0
+```
+
+## Mejoras principales:
+
+### 1. **Método de división robusto**
+- **Método 1:** División directa mejorada cuando los puntos están bien separados
+- **Método 2:** División alternativa basada en centroide y ápice cuando los puntos están muy cerca
+
+### 2. **Detección de discontinuidades**
+- Analiza saltos grandes entre puntos consecutivos
+- Usa método simple si detecta discontinuidades problemáticas
+- Reporta advertencias cuando hay problemas
+
+### 3. **Verificación de sanidad**
+- Compara resultados de interpolación cúbica vs método simple
+- Usa método simple si hay diferencias > 50%
+- Mejor manejo de errores
+
+### 4. **Visualización mejorada**
+- Script `verificar_correcciones.py` para verificar visualmente las divisiones
+- Detección automática de casos problemáticos
+- Comparación entre método original y corregido
+
+## Cómo verificar que está funcionando bien:
+
+### 1. **Ejecutar verificación:**
+```bash
+python verificar_correcciones.py
+```
+
+### 2. **Buscar en la salida:**
+- Coeficiente de simetría entre 0.7-1.0 (valores razonables)
+- Diferencias relativas < 15% en la mayoría de casos
+- Pocos o ningún salto grande detectado
+- Visualizaciones que muestren divisiones lógicas del contorno
+
+### 3. **Comparar resultados:**
+- Simetría promedio debería ser más estable
+- Menos casos con diferencias > 15% entre perímetros
+- Gráficos más suaves y consistentes
+
+### 4. **Indicadores de calidad:**
+- **Bueno:** Simetría promedio > 0.85, < 5% casos problemáticos
+- **Aceptable:** Simetría promedio > 0.75, < 10% casos problemáticos
+- **Problemático:** Simetría promedio < 0.7, > 20% casos problemáticos
+
+## Archivos generados:
+- `ejercicio3_corregido.py`: Versión corregida del código
+- `verificar_correcciones.py`: Script de verificación
+- `resultados_ejercicio3_corregido.xlsx`: Resultados con método corregido
+- `verificacion_corregida_img_X.png`: Visualizaciones de verificación
+- `comparacion_metodos.png`: Comparación visual entre métodos
+
+## Uso recomendado:
+1. Ejecutar `python verificar_correcciones.py` para verificar
+2. Revisar visualizaciones generadas
+3. Si todo se ve bien, usar el ejercicio3 corregido para análisis final
+4. Comparar estadísticas con método original si está disponible

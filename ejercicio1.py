@@ -13,11 +13,7 @@ from openpyxl.styles import Font, Alignment, PatternFill
 import tempfile
 from scipy.interpolate import CubicSpline
 
-<<<<<<< Updated upstream
-def procesar_imagen(ruta_imagen, escala=4.13):
-=======
 def procesar_imagen(ruta_imagen, escala=4.13, referencia_pixel=(0, 131)):
->>>>>>> Stashed changes
     """Procesa una imagen individual y extrae su contorno y centroide.
 
     Args:
@@ -64,11 +60,6 @@ def procesar_imagen(ruta_imagen, escala=4.13, referencia_pixel=(0, 131)):
         y_min = np.min(contorno_µm[:, 0])
         contorno_µm[:, 0] -= y_min  # Ajustar para que y=0 sea la base
 
-<<<<<<< Updated upstream
-        # 6. Calcular centroide (centro de masa)
-        centro_x = float(np.mean(contorno_µm[:, 1]))
-        centro_y = float(np.mean(contorno_µm[:, 0]))
-=======
         # 5. Filtrar puntos por encima de la línea de referencia (el reflejo está debajo)
         mask_arriba = contorno[:, 0] < y_ref
         contorno_filtrado = contorno[mask_arriba]
@@ -99,23 +90,16 @@ def procesar_imagen(ruta_imagen, escala=4.13, referencia_pixel=(0, 131)):
 
         centro_x = float(np.mean(contorno_interp[:, 0]))
         centro_y = float(np.mean(contorno_interp[:, 1]))
->>>>>>> Stashed changes
 
         # 7. Visualización para diagnóstico
         fig, ax = plt.subplots(figsize=(6, 6))
         ax.imshow(imagen, cmap='gray')
-<<<<<<< Updated upstream
-        ax.plot(contorno[:, 1], contorno[:, 0], 'r-', linewidth=2, label='Contorno')
-        ax.scatter(contorno[:, 1].mean(), contorno[:, 0].mean(),
-                   c='blue', marker='x', s=100, label='Centroide')
-=======
         ax.plot(contorno_filtrado[:, 1], contorno_filtrado[:, 0], 'r--', linewidth=1, label='Contorno crudo')
         ax.plot(contorno_interp[:, 0] / escala + x_ref, y_ref - (contorno_interp[:, 1] / escala), 'g-', linewidth=2, label='Contorno suavizado')
         ax.axhline(y=y_ref, color='y', linestyle='--', linewidth=1.0, label='Referencia y=0')
         centro_px_x = centro_x / escala + x_ref
         centro_px_y = y_ref - (centro_y / escala)
         ax.scatter(centro_px_x, centro_px_y, c='blue', marker='x', s=100, label='Centroide')
->>>>>>> Stashed changes
         ax.axis('off')
         plt.legend(loc='upper right')
         plt.title(f'Procesamiento: {os.path.basename(ruta_imagen)}')
